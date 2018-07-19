@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>别踩白块</title>
+
+    <style>
+        h1 {
+            text-align: center;
+            vertical-align: central;
+        }
+        button {
+            width: 100px;
+            height: 50px;
+            margin: 50px auto;
+            display: block;
+
+        }
+        #main {
+            width: 400px;
+            height:400px;
+            position: relative;
+            margin: 100px auto;
+            background-color: gainsboro;
+            overflow: hidden;
+        }
+        #container {
+            width: 400px;
+            height:auto;
+            position: relative;
+            top: -300px;
+        }
+        .row {
+            width: 400px;
+            height: 100px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            float: left;
+        }
+        .black {
+            background-color: black;
+        }
+    </style>
+</head>
+
+<body>
+<div>
+    <h1>score:<span id="score">0</span></h1>
+    <div>
+        <button id="restart">restart</button>
+    </div>
+</div>
+<div id="main">
+    <div id="container"></div>
+</div>
+
+
+<script>
+    var control = null;
+    var container = $('container');
+    var speed = 2;
+
+    var ROWS = 4;
+    var COLUMES = 4;
+
+    var INIT = 1;
+    var RUNNING = 2;
+    var GAMEOVER = 3;
+    var state = INIT;
+
+
+    function init() {
+        for (var i=0; i<ROWS; i++) {
+            addRow();
+        }
+        $('restart').disabled = true;
+        $('restart').onclick = function () {
+
+        }
+        $('main').onclick = function () {
+            if (state != RUNNING) return;
+            var target = event.target.className;
+            if (target == 'cell black') {
+                event.target.className = 'cell';
+                event.target.parentNode.pass = 1;
+                addScore();
+            } else {
+                fail();
+            }
+        }
+    }
+
+    function start() {
+        control = setInterval(move, 50);
+        state = RUNNING;
+    }
+
+    function addRow() {
+        var row = creatediv('row');
+
+        var cells = createCells();
+        var blackIndex = Math.floor(Math.random() * COLUMES);
+        cells[blackIndex].className = 'cell black';
+
+        for(var k=0; k<cells.length; k++) {
+            row.appendChild(cells[k]);
+        }
+
+        if (container.firstChild == null) {
+            container.appendChild(row);
+        } else {
+            container.insertBefore(row, container.firstChild);
+        }
+    }
+
+    function dropRow() {
+        if (container.childNodes.length == 6) {
+            container.removeChild(container.lastChild);
+        }
+    }
+
+    function createCells() {
+        var cells = [];
+        for (var j=0; j<COLUMES; j++) {
+            cells[j] = creatediv('cell');
+        }
+        return cells;
+    }
+
+    function creatediv(className) {
+        var row = document.createElement('div');
+        row.className = className;
+        return row;
+    }
+
+    function move() {
+        var top = parseInt(window.getComputedStyle(container, null)['top']);
+        console.log('container.top = ' + top);
+        console.log('childNodes.length = ' + container.childNodes.length);
+        if (top + speed > 0) {
+            top = 0;
+        } else {
+            top += speed;
+        }
+        container.style.top = speed + top + 'px';
+
+        if (top == 0) {
+            addRow();
+            container.style.top = '-100px';
+            dropRow();
+        } else {
+            if (container.children.length == 5 && top == (-100 + speed)) {
+                var childs = container.children;
+                if (childs[childs.length - 1].pass != 1) {
+                    fail();
+                }
+            }
+        }
+    }
+
+    function addScore() {
+        var score = $('score');
+        score.innerHTML = parseInt(score.innerHTML) + 1;
+        if (parseInt(score.innerHTML) % 10 == 0) {
+            speedup();
+        }
+    }
+
+    function speedup() {
+        speed += 2;
+    }
+
+    function fail() {
+        alert('Game over!');
+        clearInterval(control);
+        state = GAMEOVER;
+        $('restart').disabled = false;
+    }
+
+    function $(id) {
+        return document.getElementById(id);
+    }
+    init();
+    start();
+</script>
+</body>
+</html>
